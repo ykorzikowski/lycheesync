@@ -1,5 +1,8 @@
 # Lycheesync
 
+## Fork by ykorzikowski
+- Added option for db prefixes
+
 [![Build Status](https://travis-ci.org/GustavePate/lycheesync.svg)](https://travis-ci.org/GustavePate/lycheesync) [![Coverage Status](https://img.shields.io/coveralls/GustavePate/lycheesync/master.svg)](https://coveralls.io/github/GustavePate/lycheesync?branch=master)
 
 Lycheesync is a command line tool to synchronise a directory containing photos with Lychee.

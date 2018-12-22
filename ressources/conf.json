@@ -1,6 +1,7 @@
 {
     "db":"lycheetest",
     "dbUser":"lycheetest",
+    "dbPrefix":"lycheesync_",
     "dbPassword":"lycheetest",
     "dbHost":"localhost",
     "dbSocket":"/var/run/mysqld/mysqld.sock",
@@ -9,4 +10,3 @@
     "excludeAlbums": [
     ]
 }
-
