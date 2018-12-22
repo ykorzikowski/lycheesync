@@ -349,11 +349,10 @@ class LycheeDAO:
             cur = self.db.cursor()
             logger.debug("try to createAlbum: %s", query)
             # duplicate of previous query to use driver quote protection features
-            cur.execute("insert into %slychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)",
-                        (self.prefix, album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
+            cur.execute("insert into {}lychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)".format(self.prefix), ( album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
             self.db.commit()
 
-            cur.execute("select id from %slychee_albums where title=%s", (self.prefix, album['name']))
+            cur.execute("select id from {}lychee_albums where title=%s".format(self.prefix), (album['name']))
             row = cur.fetchone()
             self.albumslist['name'] = row['id']
             album['id'] = row['id']
