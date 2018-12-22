@@ -18,7 +18,7 @@ class LycheeDAO:
     """
     Implements linking with Lychee DB
     """
-
+    prefix = None
     db = None
     db2 = None
     conf = None
@@ -30,6 +30,7 @@ class LycheeDAO:
         """
         try:
             self.conf = conf
+            self.prefix = self.conf['dbPrefix']
             if 'dbSocket' in self.conf:
                 logger.debug("Connection to db in SOCKET mode")
                 logger.error("host: %s", self.conf['dbHost'])
@@ -101,7 +102,7 @@ class LycheeDAO:
 
     def getAlbumNameDBWidth(self):
         res = 50  # default value
-        query = "show columns from lychee_albums where Field='title'"
+        query = "show columns from {}lychee_albums where Field='title'".format(self.prefix)
         cur = self.db.cursor()
         try:
             cur.execute(query)
@@ -127,8 +128,8 @@ class LycheeDAO:
         """
         returns min, max album ids
         """
-        min_album_query = "select min(id) as min from lychee_albums"
-        max_album_query = "select max(id) as max from lychee_albums"
+        min_album_query = "select min(id) as min from {}lychee_albums".format(self.prefix)
+        max_album_query = "select max(id) as max from {}lychee_albums".format(self.prefix)
         try:
             min = -1
             max = -1
@@ -166,7 +167,7 @@ class LycheeDAO:
 
         res = True
         try:
-            qry = "update lychee_albums set sysstamp= '" + str(newdate) + "' where id=" + str(albumid)
+            qry = "update {}lychee_albums set sysstamp= '".format(self.prefix) + str(newdate) + "' where id=" + str(albumid)
             cur = self.db.cursor()
             cur.execute(qry)
             self.db.commit()
@@ -183,8 +184,8 @@ class LycheeDAO:
         Change albums id based on album titles (to affect display order)
         """
         res = True
-        photo_query = "update lychee_photos set album = " + str(newid) + " where album = " + str(oldid)
-        album_query = "update lychee_albums set id = " + str(newid) + " where id = " + str(oldid)
+        photo_query = "update {}lychee_photos set album = ".format(self.prefix) + str(newid) + " where album = " + str(oldid)
+        album_query = "update {}lychee_albums set id = ".format(self.prefix) + str(newid) + " where id = " + str(oldid)
         try:
             cur = self.db.cursor()
             cur.execute(photo_query)
@@ -206,7 +207,7 @@ class LycheeDAO:
         """
         # Load album list
         cur = self.db.cursor()
-        cur.execute("SELECT title,id from lychee_albums")
+        cur.execute("SELECT title,id from {}lychee_albums".format(self.prefix))
         rows = cur.fetchall()
         for row in rows:
             self.albumslist[row['title']] = row['id']
@@ -218,7 +219,7 @@ class LycheeDAO:
         res = False
         try:
             cur = self.db.cursor()
-            cur.execute("select * from lychee_albums where id=%s", (album_id))
+            cur.execute("select * from {}lychee_albums where id=%s".format(self.prefix), (album_id))
             row = cur.fetchall()
             if len(row) != 0:
                 res = True
@@ -243,7 +244,7 @@ class LycheeDAO:
         album_names = ''
         try:
             albumids = ','.join(list_id)
-            query = ("select title from lychee_albums where id in(" + albumids + ")")
+            query = ("select title from {}lychee_albums where id in(" + albumids + ")".format(self.prefix))
             cur = self.db.cursor()
             cur.execute(query)
             rows = cur.fetchall()
@@ -259,7 +260,7 @@ class LycheeDAO:
         res = None
         try:
             cur = self.db.cursor()
-            cur.execute("select id from lychee_photos where id=%s", (photoid))
+            cur.execute("select id from {}lychee_photos where id=%s".format(self.prefix), (photoid))
             row = cur.fetchall()
             if len(row) != 0:
                 logger.debug("photoExistsById %s", row)
@@ -273,7 +274,7 @@ class LycheeDAO:
         res = None
         try:
             cur = self.db.cursor()
-            cur.execute("select id from lychee_photos where title=%s", (photo_name))
+            cur.execute("select id from %slychee_photos where title=%s", (self.prefix, photo_name))
             row = cur.fetchall()
             if len(row) != 0:
                 logger.debug("photoExistsByName %s", row)
@@ -294,7 +295,7 @@ class LycheeDAO:
         try:
             cur = self.db.cursor()
             cur.execute(
-                "select * from lychee_photos where album=%s AND (title=%s OR checksum=%s)",
+                "select * from {}lychee_photos where album=%s AND (title=%s OR checksum=%s)".format(self.prefix),
                 (photo.albumid,
                  photo.originalname,
                  photo.checksum))
@@ -306,7 +307,7 @@ class LycheeDAO:
 
             cur = self.db.cursor()
             cur.execute(
-                "select album from lychee_photos where (title=%s OR checksum=%s)",
+                "select album from {}lychee_photos where (title=%s OR checksum=%s)".format(self.prefix),
                 (photo.originalname,
                  photo.checksum))
             rows = cur.fetchall()
@@ -334,7 +335,8 @@ class LycheeDAO:
         """
         album['id'] = str(self.getUniqAlbumId())
 
-        query = ("insert into lychee_albums (id, title, sysstamp, public, password) values ({},'{}',{},'{}',NULL)".format(
+        query = ("insert into {}lychee_albums (id, title, sysstamp, public, password) values ({},'{}',{},'{}',NULL)".format(
+            self.prefix,
             album['id'],
             album['name'],
             datetime.datetime.now().strftime('%s'),
@@ -346,10 +348,10 @@ class LycheeDAO:
             cur = self.db.cursor()
             logger.debug("try to createAlbum: %s", query)
             # duplicate of previous query to use driver quote protection features
-            cur.execute("insert into lychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)", (album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
+            cur.execute("insert into {}lychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)".format(self.prefix), ( album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
             self.db.commit()
 
-            cur.execute("select id from lychee_albums where title=%s", (album['name']))
+            cur.execute("select id from {}lychee_albums where title=%s".format(self.prefix), (album['name']))
             row = cur.fetchone()
             self.albumslist['name'] = row['id']
             album['id'] = row['id']
@@ -369,8 +371,8 @@ class LycheeDAO:
         Return list of the erased photo url
         """
         res = []
-        query = "delete from lychee_photos where album = " + str(album_id) + ''
-        selquery = "select url from lychee_photos where album = " + str(album_id) + ''
+        query = "delete from {}lychee_photos where album = {}".format(self.prefix, album_id)
+        selquery = "select url from {}lychee_photos where album = {}".format(self.prefix, album_id)
         try:
             cur = self.db.cursor()
             cur.execute(selquery)
@@ -379,7 +381,7 @@ class LycheeDAO:
                 res.append(row['url'])
             cur.execute(query)
             self.db.commit()
-            logger.debug("album photos erased: ", album_id)
+            logger.debug("album photos erased: ", str(album_id))
         except Exception as e:
             logger.exception(e)
             logger.error("eraseAlbum")
@@ -388,7 +390,7 @@ class LycheeDAO:
 
     def dropAlbum(self, album_id):
         res = False
-        query = "delete from lychee_albums where id = " + str(album_id) + ''
+        query = "delete from {}lychee_albums where id = {}".format(self.prefix, album_id)
         try:
             cur = self.db.cursor()
             cur.execute(query)
@@ -403,7 +405,7 @@ class LycheeDAO:
     def dropPhoto(self, photo_id):
         """ delete a photo. parameter: photo_id """
         res = False
-        query = "delete from lychee_photos where id = " + str(photo_id) + ''
+        query = "delete from {}lychee_photos where id = {}".format(self.prefix, photo_id)
         try:
             cur = self.db.cursor()
             cur.execute(query)
@@ -422,9 +424,9 @@ class LycheeDAO:
         """
         res = []
         if not(album_id):
-            selquery = "select id, url, album  from lychee_photos"
+            selquery = "select id, url, album  from {}lychee_photos".format(self.prefix)
         else:
-            selquery = "select id, url, album  from lychee_photos where album={}".format(album_id)
+            selquery = "select id, url, album  from {}lychee_photos where album={}".format(self.prefix, album_id)
 
         try:
             cur = self.db.cursor()
@@ -445,7 +447,7 @@ class LycheeDAO:
         res = []
         try:
             # check if exists in db
-            sql = "select id from lychee_albums where id not in(select distinct album from lychee_photos)"
+            sql = "select id from {}lychee_albums where id not in(select distinct album from {}lychee_photos)".format(self.prefix)
             with self.db.cursor() as cursor:
                 cursor.execute(sql)
                 rows = cursor.fetchall()
@@ -462,7 +464,7 @@ class LycheeDAO:
         res = None
         try:
             # check if exists in db
-            sql = "select id, title from lychee_albums"
+            sql = "select id, title from {}lychee_albums".format(self.prefix)
             with self.db.cursor() as cursor:
                 cursor.execute(sql)
                 rows = cursor.fetchall()
@@ -487,7 +489,7 @@ class LycheeDAO:
         except Exception as e:
             stamp = datetime.datetime.now().strftime('%s')
 
-        query = ("insert into lychee_photos " +
+        query = ("insert into {}lychee_photos " +
                  "(id, url, public, type, width, height, " +
                  "size, star, " +
                  "thumbUrl, album,iso, aperture, make, " +
@@ -500,7 +502,7 @@ class LycheeDAO:
                  " '{}', " +
                  "'{}', '{}', '{}', '{}', " +
                  "'{}', %s, '{}')"
-                 ).format(photo.id, photo.url, self.conf["publicAlbum"], photo.type, photo.width, photo.height,
+                 ).format(self.prefix, photo.id, photo.url, self.conf["publicAlbum"], photo.type, photo.width, photo.height,
                           photo.size, photo.star,
                           photo.thumbUrl, photo.albumid,
                           photo.exif.iso,
@@ -525,7 +527,7 @@ class LycheeDAO:
 
         min, max = self.getAlbumMinMaxIds()
         if max:
-            qry = "alter table lychee_albums AUTO_INCREMENT=" + str(max + 1)
+            qry = "alter table {}lychee_albums AUTO_INCREMENT=".format(self.prefix) + str(max + 1)
             try:
                 cur = self.db.cursor()
                 cur.execute(qry)
@@ -549,8 +551,8 @@ class LycheeDAO:
         """
         try:
             cur = self.db.cursor()
-            cur.execute("delete from lychee_albums")
-            cur.execute("delete from lychee_photos")
+            cur.execute("delete from {}lychee_albums".format(self.prefix))
+            cur.execute("delete from {}lychee_photos".format(self.prefix))
             self.db.commit()
         except Exception as e:
             logger.exception(e)
