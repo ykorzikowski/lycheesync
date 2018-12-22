@@ -221,11 +221,14 @@ class LycheePhoto:
                             s = 2 ** s
                             s = decimal.Decimal(s).quantize(decimal.Decimal('1'), rounding=decimal.ROUND_05UP)
                             if s <= 1:
-                                s = decimal.Decimal(
-                                    1 /
-                                    float(s)).quantize(
-                                    decimal.Decimal('0.1'),
-                                    rounding=decimal.ROUND_05UP)
+                                divider = float(s).quantize(
+                                decimal.Decimal('0.1'), rounding=decimal.ROUND_05UP);
+
+                                if divider == 0:
+                                    logger.warn('divider is 0!')
+                                else:
+                                    s = decimal.Decimal(1 / divider)
+
                             else:
                                 s = "1/" + str(s)
                             self.exif.shutter = str(s) + " s"
