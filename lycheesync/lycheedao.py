@@ -167,7 +167,7 @@ class LycheeDAO:
 
         res = True
         try:
-            qry = "update {}lychee_albums set sysstamp= '".format(self.prefix) + str(newdate) + "' where id=" + str(albumid)
+            qry = "update {}lychee_albums set sysstamp='{}' where id={}".format(self.prefix, str(newdate), str(albumid))
             cur = self.db.cursor()
             cur.execute(qry)
             self.db.commit()
@@ -184,8 +184,9 @@ class LycheeDAO:
         Change albums id based on album titles (to affect display order)
         """
         res = True
-        photo_query = "update {}lychee_photos set album = ".format(self.prefix) + str(newid) + " where album = " + str(oldid)
-        album_query = "update {}lychee_albums set id = ".format(self.prefix) + str(newid) + " where id = " + str(oldid)
+        photo_query = "update {}lychee_photos set album='{}' where album={}".format(self.prefix, str(newid), str(oldid))
+        album_query = "update {}lychee_albums set id='{}' where id={}".format(self.prefix, str(newid), str(oldid))
+
         try:
             cur = self.db.cursor()
             cur.execute(photo_query)
@@ -244,7 +245,7 @@ class LycheeDAO:
         album_names = ''
         try:
             albumids = ','.join(list_id)
-            query = ("select title from {}lychee_albums where id in(" + albumids + ")".format(self.prefix))
+            query = "select title from {}lychee_albums where id in ({})".format(self.prefix, albumids)
             cur = self.db.cursor()
             cur.execute(query)
             rows = cur.fetchall()
@@ -260,7 +261,7 @@ class LycheeDAO:
         res = None
         try:
             cur = self.db.cursor()
-            cur.execute("select id from {}lychee_photos where id=%s".format(self.prefix), (photoid))
+            cur.execute("select id from {}lychee_photos where id=%s".format(self.prefix), photoid)
             row = cur.fetchall()
             if len(row) != 0:
                 logger.debug("photoExistsById %s", row)
@@ -348,10 +349,11 @@ class LycheeDAO:
             cur = self.db.cursor()
             logger.debug("try to createAlbum: %s", query)
             # duplicate of previous query to use driver quote protection features
-            cur.execute("insert into {}lychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)".format(self.prefix), ( album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
+            cur.execute("insert into %slychee_albums (id, title, sysstamp, public, password) values (%s,%s,%s,%s,NULL)",
+                        (self.prefix, album['id'], album['name'], datetime.datetime.now().strftime('%s'), str(self.conf["publicAlbum"])))
             self.db.commit()
 
-            cur.execute("select id from {}lychee_albums where title=%s".format(self.prefix), (album['name']))
+            cur.execute("select id from %slychee_albums where title=%s", (self.prefix, album['name']))
             row = cur.fetchone()
             self.albumslist['name'] = row['id']
             album['id'] = row['id']
