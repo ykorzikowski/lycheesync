@@ -211,14 +211,14 @@ class LycheePhoto:
                         if decode == "FocalLength":
                             self.exif.focal = value[0]
                         if decode == "ISOSpeedRatings":
-                            self.exif.iso = value[0]
+                            self.exif.iso = int(value)
                         if decode == "Model":
                             self.exif.model = value
                         if decode == "ExposureTime":
                             self.exif.exposure = value[0]
                         if decode == "ShutterSpeedValue":
                             s = value[0]
-                            s = 2 ** s
+                            #s = 2 ** s
                             s = decimal.Decimal(s).quantize(decimal.Decimal('1'), rounding=decimal.ROUND_05UP)
                             if s <= 1:
                                 s = decimal.Decimal(

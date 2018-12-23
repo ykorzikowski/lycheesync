@@ -382,7 +382,7 @@ class LycheeDAO:
                 res.append(row['url'])
             cur.execute(query)
             self.db.commit()
-            logger.debug("album photos erased: ", str(album_id))
+            #logger.debug("album photos erased: ", album_id)
         except Exception as e:
             logger.exception(e)
             logger.error("eraseAlbum")
