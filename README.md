@@ -8,6 +8,7 @@ Lycheesync is a command line tool to synchronise a directory containing photos w
 
 ## Fork by ykorzikowski
 - Added option for db prefixes
+- Updated Pillow to 3.1.0 to fix division by null bug
 
 ## WARNING: Breaking changes
 
